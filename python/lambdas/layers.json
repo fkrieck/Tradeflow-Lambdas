@@ -1,0 +1,316 @@
+{
+  "_metadata": {
+    "source": "https://api.klayers.cloud/api/v2/p3.12/layers/latest/eu-west-1/json",
+    "python_version": "3.12",
+    "region": "eu-west-1",
+    "note": "AWSSDKPandas (awswrangler) não está no KLayers — é fornecido diretamente pela AWS. ARN disponível em: https://github.com/aws/aws-sdk-pandas"
+  },
+  "aws_managed": {
+    "AWSSDKPandas-Python312": {
+      "arn": "arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:20",
+      "note": "Layer oficial AWS para aws-sdk-pandas (awswrangler). Verificar versão mais recente em: https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html"
+    }
+  },
+  "klayers": [
+    {
+      "package": "SQLAlchemy",
+      "packageVersion": "2.0.47",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:10"
+    },
+    {
+      "package": "RapidFuzz",
+      "packageVersion": "3.14.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-RapidFuzz:5"
+    },
+    {
+      "package": "Pillow",
+      "packageVersion": "12.1.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-Pillow:10"
+    },
+    {
+      "package": "PyJWT",
+      "packageVersion": "2.12.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-PyJWT:3"
+    },
+    {
+      "package": "PyMuPDF",
+      "packageVersion": "1.27.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-PyMuPDF:14"
+    },
+    {
+      "package": "aliyun-python-sdk-actiontrail",
+      "packageVersion": "2.2.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-aliyun-python-sdk-actiontrail:23"
+    },
+    {
+      "package": "amazon-textract-caller",
+      "packageVersion": "0.2.4",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-amazon-textract-caller:16"
+    },
+    {
+      "package": "aws-requests-auth",
+      "packageVersion": "0.4.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-aws-requests-auth:22"
+    },
+    {
+      "package": "aws-xray-sdk",
+      "packageVersion": "2.15.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-aws-xray-sdk:29"
+    },
+    {
+      "package": "bcrypt",
+      "packageVersion": "5.0.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-bcrypt:6"
+    },
+    {
+      "package": "beautifulsoup4",
+      "packageVersion": "4.14.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-beautifulsoup4:13"
+    },
+    {
+      "package": "boto3",
+      "packageVersion": "1.42.59",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-boto3:29"
+    },
+    {
+      "package": "cfnresponse",
+      "packageVersion": "1.1.5",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-cfnresponse:3"
+    },
+    {
+      "package": "cryptography",
+      "packageVersion": "46.0.5",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-cryptography:21"
+    },
+    {
+      "package": "curl_cffi",
+      "packageVersion": "0.14.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-curl_cffi:13"
+    },
+    {
+      "package": "defusedxml",
+      "packageVersion": "0.7.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-defusedxml:1"
+    },
+    {
+      "package": "dnspython",
+      "packageVersion": "2.8.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-dnspython:4"
+    },
+    {
+      "package": "duckdb",
+      "packageVersion": "1.4.4",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-duckdb:15"
+    },
+    {
+      "package": "dynamodb-encryption-sdk",
+      "packageVersion": "3.3.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-dynamodb-encryption-sdk:29"
+    },
+    {
+      "package": "feedparser",
+      "packageVersion": "6.0.12",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-feedparser:2"
+    },
+    {
+      "package": "fuzzywuzzy",
+      "packageVersion": "0.18.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-fuzzywuzzy:15"
+    },
+    {
+      "package": "gspread",
+      "packageVersion": "6.2.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-gspread:20"
+    },
+    {
+      "package": "icalendar",
+      "packageVersion": "7.0.2",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-icalendar:11"
+    },
+    {
+      "package": "idna",
+      "packageVersion": "3.11",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-idna:5"
+    },
+    {
+      "package": "imutils",
+      "packageVersion": "0.5.4",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-imutils:1"
+    },
+    {
+      "package": "jinja2",
+      "packageVersion": "3.1.6",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-jinja2:8"
+    },
+    {
+      "package": "mail-parser",
+      "packageVersion": "4.1.4",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-mail-parser:6"
+    },
+    {
+      "package": "memray",
+      "packageVersion": "1.19.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-memray:28"
+    },
+    {
+      "package": "mysql-connector-python",
+      "packageVersion": "9.6.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-mysql-connector-python:10"
+    },
+    {
+      "package": "numpy",
+      "packageVersion": "2.4.2",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:13"
+    },
+    {
+      "package": "openai",
+      "packageVersion": "2.24.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-openai:3"
+    },
+    {
+      "package": "opensearch-py",
+      "packageVersion": "3.1.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-opensearch-py:19"
+    },
+    {
+      "package": "orjson",
+      "packageVersion": "3.11.7",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-orjson:18"
+    },
+    {
+      "package": "pandas",
+      "packageVersion": "2.2.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pandas:17"
+    },
+    {
+      "package": "pandera",
+      "packageVersion": "0.23.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pandera:1"
+    },
+    {
+      "package": "pdf2image",
+      "packageVersion": "1.17.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pdf2image:1"
+    },
+    {
+      "package": "pdfplumber",
+      "packageVersion": "0.11.9",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pdfplumber:19"
+    },
+    {
+      "package": "pillow",
+      "packageVersion": "11.0.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pillow:2"
+    },
+    {
+      "package": "polars",
+      "packageVersion": "1.33.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-polars:22"
+    },
+    {
+      "package": "psycopg",
+      "packageVersion": "3.3.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-psycopg:24"
+    },
+    {
+      "package": "psycopg2-binary",
+      "packageVersion": "2.9.11",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-psycopg2-binary:2"
+    },
+    {
+      "package": "pycountry",
+      "packageVersion": "26.2.16",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pycountry:2"
+    },
+    {
+      "package": "pymongo",
+      "packageVersion": "4.16.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pymongo:4"
+    },
+    {
+      "package": "pymssql",
+      "packageVersion": "2.3.10",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pymssql:8"
+    },
+    {
+      "package": "pyopenssl",
+      "packageVersion": "25.3.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pyopenssl:11"
+    },
+    {
+      "package": "pyotp",
+      "packageVersion": "2.9.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pyotp:1"
+    },
+    {
+      "package": "pyqldb",
+      "packageVersion": "3.2.4",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pyqldb:29"
+    },
+    {
+      "package": "python-gitlab",
+      "packageVersion": "8.1.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-python-gitlab:16"
+    },
+    {
+      "package": "python-pptx",
+      "packageVersion": "1.0.2",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-python-pptx:19"
+    },
+    {
+      "package": "pytz",
+      "packageVersion": "2025.2",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pytz:3"
+    },
+    {
+      "package": "pyyaml",
+      "packageVersion": "6.0.3",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pyyaml:2"
+    },
+    {
+      "package": "redshift-connector",
+      "packageVersion": "2.1.11",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-redshift-connector:29"
+    },
+    {
+      "package": "redis",
+      "packageVersion": "7.2.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-redis:9"
+    },
+    {
+      "package": "requests",
+      "packageVersion": "2.32.5",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-requests:22"
+    },
+    {
+      "package": "scipy",
+      "packageVersion": "1.14.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-scipy:3"
+    },
+    {
+      "package": "stripe",
+      "packageVersion": "14.4.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-stripe:23"
+    },
+    {
+      "package": "tabulate",
+      "packageVersion": "0.9.0",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-tabulate:1"
+    },
+    {
+      "package": "tls-client",
+      "packageVersion": "1.0.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-tls-client:1"
+    },
+    {
+      "package": "tzlocal",
+      "packageVersion": "5.3.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-tzlocal:3"
+    },
+    {
+      "package": "praw",
+      "packageVersion": "7.8.1",
+      "arn": "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-praw:20"
+    }
+  ]
+}

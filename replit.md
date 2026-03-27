@@ -1,8 +1,36 @@
-# Workspace
+# Workspace — Tradeflow-Lambdas
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm workspace monorepo using TypeScript for backend/API. Additionally contains a `python/` directory for managing AWS Lambda functions (Python 3.12) that connect to MSSQL databases. Deploy is handled manually to AWS.
+
+## Python / AWS Lambda Project
+
+The `python/` directory is the core of the Tradeflow-Lambdas project:
+
+```text
+python/
+├── tabelas/                        # MSSQL table definitions (CREATE TABLE scripts)
+│   ├── LambdasRunning.sql          # Control table for Lambda execution tracking
+│   └── S0_DLK_EZD_Sales.sql       # Stage table for EZD Sales data (Parquet ingestion)
+├── procedures/                     # MSSQL stored procedures
+│   └── SPINSUPD_LambdasRunning.sql # INSERT/UPDATE status in LambdasRunning table
+└── lambdas/                        # AWS Lambda functions (Python 3.12)
+    ├── layers.json                 # KLayers ARNs for eu-west-1 + AWS-managed layers
+    └── tradeflow-load-ezd-sales-dev/
+        └── handler.py              # Lambda: reads Parquet from S3, loads into MSSQL
+```
+
+### Lambda Conventions
+- Each Lambda lives in its own subfolder under `python/lambdas/`
+- Handler entry point configured in AWS: `handler.lambda_handler`
+- Secrets (DB credentials) retrieved via AWS Secrets Manager
+- Layers referenced in comments at the top of each `handler.py`
+- Full layer catalog (KLayers + AWS-managed) available in `python/lambdas/layers.json`
+
+### Layer Sources
+- **KLayers** (Python 3.12, eu-west-1): https://api.klayers.cloud/api/v2/p3.12/layers/latest/eu-west-1/json
+- **AWSSDKPandas**: https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html
 
 ## Stack
 
