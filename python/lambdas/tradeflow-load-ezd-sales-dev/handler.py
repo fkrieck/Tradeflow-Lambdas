@@ -13,18 +13,21 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from typing import Union, Iterable
+from urllib.parse import quote_plus
 
 ### LAYERS - PYTHON 3.12
 #arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:20
-#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:11
-#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:7
+#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:13
+#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:10
 #
-# ATENÇÃO - pyodbc NÃO está disponível no KLayers (requer unixODBC + ODBC Driver 18 nativos).
-# É necessário um layer customizado contendo:
+# ATENÇÃO - Klayers-p312-pyodbc NÃO existe no KLayers para Python 3.12.
+# pyodbc está disponível apenas para Python 3.10: Klayers-p310-pyodbc:5
+# (arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p310-pyodbc:5)
+# Para Python 3.12 é necessário um layer customizado contendo:
 #   - unixODBC (biblioteca do sistema)
 #   - Microsoft ODBC Driver 18 for SQL Server (msodbcsql18)
 #   - pyodbc (wheel compilado contra o unixODBC do layer)
-# Referência: https://github.com/keithrozario/Klayers (pyodbc não publicado)
+# Referência KLayers: https://github.com/keithrozario/Klayers
 # Tutorial custom layer: https://docs.aws.amazon.com/lambda/latest/dg/python-layers.html
 
 
@@ -198,17 +201,13 @@ port = secrets["port"]
 
 
 def create_database_connection() -> Engine:
-    connection_string = (
-        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-        f"SERVER={server},{port};"
-        f"DATABASE={database};"
-        f"UID={user};"
-        f"PWD={password};"
-        "TrustServerCertificate=yes;"
+    url = (
+        f"mssql+pyodbc://{quote_plus(str(user))}:{quote_plus(str(password))}"
+        f"@{server}:{port}/{database}"
+        f"?driver=ODBC+Driver+18+for+SQL+Server"
     )
-    connection_url = f"mssql+pyodbc:///?odbc_connect={connection_string}"
 
-    return create_engine(connection_url, fast_executemany=True)
+    return create_engine(url, fast_executemany=True)
 
 def insert_into_database(
     df: pd.DataFrame,
