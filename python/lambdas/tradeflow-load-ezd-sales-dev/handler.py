@@ -4,7 +4,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 import awswrangler as wr
-import pymssql
+import pyodbc
 from datetime import datetime
 from uuid import uuid4
 import os
@@ -16,9 +16,16 @@ from typing import Union, Iterable
 
 ### LAYERS - PYTHON 3.12
 #arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:20
-#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pymssql:8
 #arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:11
 #arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:7
+#
+# ATENÇÃO - pyodbc NÃO está disponível no KLayers (requer unixODBC + ODBC Driver 18 nativos).
+# É necessário um layer customizado contendo:
+#   - unixODBC (biblioteca do sistema)
+#   - Microsoft ODBC Driver 18 for SQL Server (msodbcsql18)
+#   - pyodbc (wheel compilado contra o unixODBC do layer)
+# Referência: https://github.com/keithrozario/Klayers (pyodbc não publicado)
+# Tutorial custom layer: https://docs.aws.amazon.com/lambda/latest/dg/python-layers.html
 
 
 LOGGER = logging.getLogger()
@@ -191,9 +198,17 @@ port = secrets["port"]
 
 
 def create_database_connection() -> Engine:
-    url = f'mssql+pymssql://{user}:{password}@{server}:{port}/{database}'
+    connection_string = (
+        f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+        f"SERVER={server},{port};"
+        f"DATABASE={database};"
+        f"UID={user};"
+        f"PWD={password};"
+        "TrustServerCertificate=yes;"
+    )
+    connection_url = f"mssql+pyodbc:///?odbc_connect={connection_string}"
 
-    return create_engine(url)
+    return create_engine(connection_url, fast_executemany=True)
 
 def insert_into_database(
     df: pd.DataFrame,
@@ -337,20 +352,6 @@ def insert_data(row, eventfile):
     cur.close()
 '''
 
-# Criar conexão com a Base de dados e registrar o status de execução do evento
-'''
-def create_cursor():
-    try:
-        conn = pymssql.connect(server=rds_endpoint, port=port, user=username, password=password, database=db_name)
-        conn.autocommit(True)
-        cur = conn.cursor()
-    except Exception as e:
-        LOGGER.error("ERROR: Unexpected error: Unable to connect to RDS MSSql instance. ")
-        LOGGER.error(e)
-        sys.exit(1)
-
-    return cur
-'''
 
 # Identificador e data do Evento
 eventid = str(uuid4())
