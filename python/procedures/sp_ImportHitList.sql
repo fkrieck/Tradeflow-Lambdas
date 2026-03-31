@@ -4,8 +4,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    drop table #StgCLIProcessed;
-    drop table #StgProcessed;
+    DROP TABLE IF EXISTS #StgCLIProcessed;
+    DROP TABLE IF EXISTS #StgProcessed;
 
     --declare @EventId UNIQUEIDENTIFIER = '9CF2EDE7-C283-4D98-8C2D-A1738DF18CA0';
 
@@ -230,7 +230,7 @@ BEGIN
             SET @has_error = 1;
             INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento)
             SELECT @uploadid,
-                   'O Cliente ' + TRIM(Nome) + ' não possui Codigo SAP e não será carregado !!! '
+                   'O Cliente ' + ISNULL(TRIM(Nome), '(sem nome)') + ' não possui Codigo SAP e não será carregado !!! '
             FROM #StgProcessed 
             WHERE Codigo IS NULL;
         END
@@ -367,7 +367,7 @@ BEGIN
             EXECUTE @RC = [dbo].[SP_AlterarContrato] @Contrato;
 
             INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
-            SELECT @uploadid, 'Alterar Metas/Pontos do Contrato '+ cast(@Contrato as nvarchar(10)) + ' para cliente ' + @CodigoSAP
+            SELECT @uploadid, 'Alterar Metas/Pontos do Contrato '+ cast(@Contrato as nvarchar(10)) + ' para cliente ' + ISNULL(@CodigoSAP, '')
 
             -- Enviar para nova Aprovação
             EXECUTE @RC = [dbo].[sp_ContratoEnviarAprovacao] 
