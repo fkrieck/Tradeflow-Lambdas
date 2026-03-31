@@ -4,10 +4,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-        drop table #StgCLIProcessed;
-        drop table #StgProcessed;
+    drop table #StgCLIProcessed;
+    drop table #StgProcessed;
 
-        --declare @EventId UNIQUEIDENTIFIER = '9CF2EDE7-C283-4D98-8C2D-A1738DF18CA0';
+    --declare @EventId UNIQUEIDENTIFIER = '9CF2EDE7-C283-4D98-8C2D-A1738DF18CA0';
 
     -- Declarar Variáveis
     DECLARE
@@ -28,9 +28,9 @@ BEGIN
       --AND Status IN ('Pendente','Processando','Erro') 
       AND Arquivo = @Arquivo;
 
-        --select EventId = @EventId, Arquivo = @Arquivo, uploadid = @uploadid, has_error = @has_error
+    --select EventId = @EventId, Arquivo = @Arquivo, uploadid = @uploadid, has_error = @has_error
 
-        --return;
+    --return;
 
     IF @uploadid IS NOT NULL
     BEGIN
@@ -110,47 +110,47 @@ BEGIN
             S.NomeMecanica,
             S.Regra,
             S.ChaveParaDetalhes,
-                        Case When Meta1 is not null then Trim(Replace(Replace(Meta1,',','.'),'R$','')) End as Meta1,
-                        Case When PtsPremio1 is not null then Trim(Replace(Replace(PtsPremio1,',','.'),'R$','')) End as PtsPremio1,
-                        Case When Meta2 is not null then Trim(Replace(Replace(Meta2,',','.'),'R$','')) End as Meta2,
-                        Case When PtsPremio2 is not null then Trim(Replace(Replace(PtsPremio2,',','.'),'R$','')) End as PtsPremio2,
-                        Case When Meta3 is not null then Trim(Replace(Replace(Meta3,',','.'),'R$','')) End as Meta3,
-                        Case When PtsPremio3 is not null then Trim(Replace(Replace(PtsPremio3,',','.'),'R$','')) End as PtsPremio3,
-                        Case When Meta4 is not null then Trim(Replace(Replace(Meta4,',','.'),'R$','')) End as Meta4,
-                        Case When PtsPremio4 is not null then Trim(Replace(Replace(PtsPremio4,',','.'),'R$','')) End as PtsPremio4,
-                        Case When Meta5 is not null then Trim(Replace(Replace(Meta5,',','.'),'R$','')) End as Meta5,
-                        Case When PtsPremio5 is not null then Trim(Replace(Replace(PtsPremio5,',','.'),'R$','')) End as PtsPremio5,
+            Case When Meta1 is not null then Trim(Replace(Replace(Meta1,',','.'),'R$','')) End as Meta1,
+            Case When PtsPremio1 is not null then Trim(Replace(Replace(PtsPremio1,',','.'),'R$','')) End as PtsPremio1,
+            Case When Meta2 is not null then Trim(Replace(Replace(Meta2,',','.'),'R$','')) End as Meta2,
+            Case When PtsPremio2 is not null then Trim(Replace(Replace(PtsPremio2,',','.'),'R$','')) End as PtsPremio2,
+            Case When Meta3 is not null then Trim(Replace(Replace(Meta3,',','.'),'R$','')) End as Meta3,
+            Case When PtsPremio3 is not null then Trim(Replace(Replace(PtsPremio3,',','.'),'R$','')) End as PtsPremio3,
+            Case When Meta4 is not null then Trim(Replace(Replace(Meta4,',','.'),'R$','')) End as Meta4,
+            Case When PtsPremio4 is not null then Trim(Replace(Replace(PtsPremio4,',','.'),'R$','')) End as PtsPremio4,
+            Case When Meta5 is not null then Trim(Replace(Replace(Meta5,',','.'),'R$','')) End as Meta5,
+            Case When PtsPremio5 is not null then Trim(Replace(Replace(PtsPremio5,',','.'),'R$','')) End as PtsPremio5,
             TRIM(REPLACE(S.Gatilho,',','.')) AS Gatilho,
-                        TRIM(REPLACE(S.Email,',','.')) AS Email,
-                        TRIM(REPLACE(S.ContactID,',','.')) AS ContactID,
-                        IIF(m.codigo IS NULL,'Mecanica ['+ S.Mecanica +'] inválida, ','')
-                        + IIF(R.RegraId IS NULL,'Regra ['+ S.Regra +'] inválida, ','')
-                        + IIF(GE.GrupoEANId IS NULL And S.ChaveParaDetalhes is not null,'Chave ['+ S.ChaveParaDetalhes +'] inválida, ','')
-                        as MsgErro,
-                        CASE -- Validar Mecanica
-                                WHEN m.codigo IS NULL 
-                                        THEN 0 
-                                ELSE 1 
-                        END AS Mecanica_is_valid,
+            TRIM(REPLACE(S.Email,',','.')) AS Email,
+            TRIM(REPLACE(S.ContactID,',','.')) AS ContactID,
+            IIF(m.codigo IS NULL,'Mecanica ['+ S.Mecanica +'] inválida, ','')
+            + IIF(R.RegraId IS NULL,'Regra ['+ S.Regra +'] inválida, ','')
+            + IIF(GE.GrupoEANId IS NULL And S.ChaveParaDetalhes is not null,'Chave ['+ S.ChaveParaDetalhes +'] inválida, ','')
+            as MsgErro,
+            CASE -- Validar Mecanica
+                WHEN m.codigo IS NULL 
+                    THEN 0 
+                ELSE 1 
+            END AS Mecanica_is_valid,
             CASE -- Validar Regras
-                                WHEN R.RegraId IS NULL 
-                                        THEN 0 
-                                ELSE 1 
-                        END AS Regra_is_valid,
+                WHEN R.RegraId IS NULL 
+                    THEN 0 
+                ELSE 1 
+            END AS Regra_is_valid,
             CASE -- Validar GrupoEANs
-                                WHEN GE.GrupoEANId IS NULL And S.ChaveParaDetalhes is not null
-                                        THEN 0 
-                                ELSE 1 
-                        END AS GrupoEAN_is_valid,
-                        S.EventID
+                WHEN GE.GrupoEANId IS NULL And S.ChaveParaDetalhes is not null
+                    THEN 0 
+                ELSE 1 
+            END AS GrupoEAN_is_valid,
+            S.EventID
         INTO #StgProcessed
         FROM 
-                        STG_ImportHitList S
-                        LEFT JOIN Mecanicas M ON (S.Mecanica = M.codigo)
-                        LEFT JOIN Regras R ON (S.Regra = R.Nome)
-                        LEFT JOIN grupoEANs GE ON(S.ChaveParaDetalhes = GE.Chave)
+            STG_ImportHitList S
+            LEFT JOIN Mecanicas M ON (S.Mecanica = M.codigo)
+            LEFT JOIN Regras R ON (S.Regra = R.Nome)
+            LEFT JOIN grupoEANs GE ON(S.ChaveParaDetalhes = GE.Chave)
         WHERE 
-                        S.Eventid = @EventId;
+            S.Eventid = @EventId;
         
 
         -- Atualizar HitList existente
@@ -172,16 +172,16 @@ BEGIN
             H.Faixa5Meta = S.Meta5,
             H.Faixa5Pontos = S.PtsPremio5,
             H.Gatilho = S.Gatilho,
-                        H.Email = S.Email,
-                        H.ContactID = S.ContactID
+            H.Email = S.Email,
+            H.ContactID = S.ContactID
         FROM HitList H
         INNER JOIN #StgProcessed S 
             ON (H.CodigoSAP = S.Codigo
-           AND H.MecanicaCodigo = S.Mecanica 
-                   And H.RegraNome = S.Regra
-           AND S.Mecanica_is_valid = 1
-                   AND S.Regra_is_valid = 1
-                   AND S.GrupoEAN_is_valid = 1)
+            AND H.MecanicaCodigo = S.Mecanica 
+            And H.RegraNome = S.Regra
+            AND S.Mecanica_is_valid = 1
+            AND S.Regra_is_valid = 1
+            AND S.GrupoEAN_is_valid = 1)
         WHERE
             ISNULL(H.Faixa1Meta, -1) <> ISNULL(S.Meta1, -1) OR
             ISNULL(H.Faixa1Pontos, -1) <> ISNULL(S.PtsPremio1, -1) OR
@@ -211,13 +211,13 @@ BEGIN
             S.Meta5, S.PtsPremio5, S.Gatilho, S.Email, S.ContactID
         FROM #StgProcessed S
         WHERE 
-                        S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
-                        AND NOT EXISTS (
-              SELECT 1 FROM HitList H 
-              WHERE H.CodigoSAP = S.Codigo 
+            S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
+            AND NOT EXISTS (
+                SELECT 1 FROM HitList H 
+                WHERE H.CodigoSAP = S.Codigo 
                 AND H.MecanicaCodigo = S.Mecanica
-                                AND H.RegraNome = S.Regra
-          );
+                AND H.RegraNome = S.Regra
+            );
 
         WAITFOR DELAY '00:00:01';
 
@@ -234,13 +234,13 @@ BEGIN
             FROM #StgProcessed 
             WHERE Codigo IS NULL;
         END
-                -- Validar Mecanicas / Regras / Chave (GrupoEANs) inválidas
+        -- Validar Mecanicas / Regras / Chave (GrupoEANs) inválidas
         IF EXISTS (SELECT 1 FROM #StgProcessed WHERE Mecanica_is_valid = 0 or Regra_is_valid = 0 or GrupoEAN_is_valid = 0 )
         BEGIN
             SET @has_error = 1;
             INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento)
             SELECT --DISTINCT 
-                                @uploadid,
+                @uploadid,
                 S.MsgErro + ' o cliente [' + TRIM(S.Codigo) + ' - ' + TRIM(S.Nome) + '] não será carregado !'
             FROM #StgProcessed S
             WHERE Mecanica_is_valid = 0 or Regra_is_valid = 0 or GrupoEAN_is_valid = 0;
@@ -249,138 +249,138 @@ BEGIN
         -------------------------------------------------------------------------
         -- Criar Contratos de Mecânicas que não precisam de Aprovação nem Aceite
         -------------------------------------------------------------------------
-                -- Step 1: Declare the cursor
-                DECLARE 
-                        @CodigoSAP Nvarchar(20)
-                        ,@Mecanica Nvarchar(20)
-                        ,@RC int
-                        ,@UserLogin varchar(100) = 'TradeFlow'
-                        ,@ContratoId int;
+        -- Step 1: Declare the cursor
+        DECLARE 
+            @CodigoSAP Nvarchar(20)
+            ,@Mecanica Nvarchar(20)
+            ,@RC int
+            ,@UserLogin varchar(100) = 'TradeFlow'
+            ,@ContratoId int;
 
-                DECLARE CriarContratoAtivadoCursor CURSOR FOR
-                -- Ativar Contratos quem não pedem Aprovação nem Aceite
-                Select distinct S.Codigo, S.Mecanica 
-                From #StgProcessed S
-                        Inner Join Mecanicas M ON(S.Mecanica = M.Codigo)
-                WHERE 
-                        S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
-                        And M.ExigeAprovacaoTrade = 0 AND M.ExigeAceiteCliente = 0;
+        DECLARE CriarContratoAtivadoCursor CURSOR FOR
+        -- Ativar Contratos quem não pedem Aprovação nem Aceite
+        Select distinct S.Codigo, S.Mecanica 
+        From #StgProcessed S
+            Inner Join Mecanicas M ON(S.Mecanica = M.Codigo)
+        WHERE 
+            S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
+            And M.ExigeAprovacaoTrade = 0 AND M.ExigeAceiteCliente = 0;
 
-                -- Step 2: Open the cursor
-                OPEN CriarContratoAtivadoCursor;
+        -- Step 2: Open the cursor
+        OPEN CriarContratoAtivadoCursor;
 
-                -- Step 3: Fetch the first row
-                FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
+        -- Step 3: Fetch the first row
+        FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
 
-                -- Step 4: Loop through the rows
-                WHILE @@FETCH_STATUS = 0
-                BEGIN
-                        -- Ativar Contratos quem não pedem Aprovação nem Aceite
-                        EXECUTE @RC = [dbo].[SP_CriarContrato] @CodigoSAP, @Mecanica, @UserLogin, @ContratoId OUTPUT
+        -- Step 4: Loop through the rows
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            -- Ativar Contratos quem não pedem Aprovação nem Aceite
+            EXECUTE @RC = [dbo].[SP_CriarContrato] @CodigoSAP, @Mecanica, @UserLogin, @ContratoId OUTPUT
 
-                        INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
-                        SELECT @uploadid, 'Criar e ativar o contrato '+ cast(@ContratoId as nvarchar(10)) + ' para cliente ' + @CodigoSAP
+            INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
+            SELECT @uploadid, 'Criar e ativar o contrato '+ cast(@ContratoId as nvarchar(10)) + ' para cliente ' + @CodigoSAP
 
-                        -- Fetch the next row
-                        FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
-                END;
+            -- Fetch the next row
+            FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
+        END;
 
-                -- Step 5: Close and deallocate the cursor
-                CLOSE CriarContratoAtivadoCursor;
-                DEALLOCATE CriarContratoAtivadoCursor;
+        -- Step 5: Close and deallocate the cursor
+        CLOSE CriarContratoAtivadoCursor;
+        DEALLOCATE CriarContratoAtivadoCursor;
 
         -------------------------------------------------------------------------
         -- Criar Contratos de Mecânicas que não precisam de Aprovação mas precisam de aceite
         -------------------------------------------------------------------------
-                -- Step 1: Declare the cursor
-                --DECLARE 
-                --      @CodigoSAP Nvarchar(20)
-                --      ,@Mecanica Nvarchar(20)
-                --      ,@RC int
-                --      ,@UserLogin varchar(100) = 'TradeFlow'
-                --      ,@ContratoId int;
+        -- Step 1: Declare the cursor
+        --DECLARE 
+        --      @CodigoSAP Nvarchar(20)
+        --      ,@Mecanica Nvarchar(20)
+        --      ,@RC int
+        --      ,@UserLogin varchar(100) = 'TradeFlow'
+        --      ,@ContratoId int;
 
-                DECLARE CriarContratoAtivadoCursor CURSOR FOR
-                -- Ativar Contratos quem não pedem Aprovação nem Aceite
-                Select distinct S.Codigo, S.Mecanica 
-                From #StgProcessed S
-                        Inner Join Mecanicas M ON(S.Mecanica = M.Codigo)
-                WHERE 
-                        S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
-                        And M.ExigeAprovacaoTrade = 0 AND M.ExigeAceiteCliente = 1;
+        DECLARE CriarContratoAtivadoCursor CURSOR FOR
+        -- Ativar Contratos quem não pedem Aprovação nem Aceite
+        Select distinct S.Codigo, S.Mecanica 
+        From #StgProcessed S
+            Inner Join Mecanicas M ON(S.Mecanica = M.Codigo)
+        WHERE 
+            S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
+            And M.ExigeAprovacaoTrade = 0 AND M.ExigeAceiteCliente = 1;
 
-                -- Step 2: Open the cursor
-                OPEN CriarContratoAtivadoCursor;
+        -- Step 2: Open the cursor
+        OPEN CriarContratoAtivadoCursor;
 
-                -- Step 3: Fetch the first row
-                FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
+        -- Step 3: Fetch the first row
+        FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
 
-                -- Step 4: Loop through the rows
-                WHILE @@FETCH_STATUS = 0
-                BEGIN
-                        -- Ativar Contratos quem não pedem Aprovação nem Aceite
-                        EXECUTE @RC = [dbo].[SP_CriarContrato] @CodigoSAP, @Mecanica, @UserLogin, @ContratoId OUTPUT
+        -- Step 4: Loop through the rows
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            -- Ativar Contratos quem não pedem Aprovação nem Aceite
+            EXECUTE @RC = [dbo].[SP_CriarContrato] @CodigoSAP, @Mecanica, @UserLogin, @ContratoId OUTPUT
 
-                        INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
-                        SELECT @uploadid, 'Criar e ativar o contrato '+ cast(@ContratoId as nvarchar(10)) + ' para cliente ' + @CodigoSAP
+            INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
+            SELECT @uploadid, 'Criar e ativar o contrato '+ cast(@ContratoId as nvarchar(10)) + ' para cliente ' + @CodigoSAP
 
-                        execute [sp_ContratoEnviarAprovacao] @ContratoId = @ContratoId, @Login = 'Importação Hitlist'
+            execute [sp_ContratoEnviarAprovacao] @ContratoId = @ContratoId, @Login = 'Importação Hitlist'
 
-                        -- Fetch the next row
-                        FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
-                END;
+            -- Fetch the next row
+            FETCH NEXT FROM CriarContratoAtivadoCursor INTO @CodigoSAP, @Mecanica;
+        END;
 
-                -- Step 5: Close and deallocate the cursor
-                CLOSE CriarContratoAtivadoCursor;
-                DEALLOCATE CriarContratoAtivadoCursor;
+        -- Step 5: Close and deallocate the cursor
+        CLOSE CriarContratoAtivadoCursor;
+        DEALLOCATE CriarContratoAtivadoCursor;
 
         -----------------------------------------------------------------------------
         -- Hitlist Carregado com novas Metas/Pontos de um cliente com Contrato Ativo
         -----------------------------------------------------------------------------
-                -- Declare the cursor
-                DECLARE 
-                        @Contrato int
-                        ,@Cliente int
+        -- Declare the cursor
+        DECLARE 
+            @Contrato int
+            ,@Cliente int
 
-                DECLARE AlterarContratoAtivadoCursor CURSOR FOR
-                -- Ativar Contratos quem não pedem Aprovação nem Aceite
+        DECLARE AlterarContratoAtivadoCursor CURSOR FOR
+        -- Ativar Contratos quem não pedem Aprovação nem Aceite
 
-                Select distinct 
-                        C.contratoid, Cli.ClienteId, Cli.CodigoSAP 
-                From #StgProcessed S
-                        Inner Join Clientes Cli on(S.Codigo = Cli.CodigoSAP)
-                        Inner Join Contratos C on(C.ClienteId = Cli.ClienteId)
-                Where
-                        C.Status = 'Ativo'
-                        And S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
+        Select distinct 
+            C.contratoid, Cli.ClienteId, Cli.CodigoSAP 
+        From #StgProcessed S
+            Inner Join Clientes Cli on(S.Codigo = Cli.CodigoSAP)
+            Inner Join Contratos C on(C.ClienteId = Cli.ClienteId)
+        Where
+            C.Status = 'Ativo'
+            And S.Mecanica_is_valid = 1 and S.Regra_is_valid = 1 AND S.GrupoEAN_is_valid = 1
 
-                -- Step 2: Open the cursor
-                OPEN AlterarContratoAtivadoCursor;
+        -- Step 2: Open the cursor
+        OPEN AlterarContratoAtivadoCursor;
 
-                -- Step 3: Fetch the first row
-                FETCH NEXT FROM AlterarContratoAtivadoCursor INTO @Contrato, @Cliente, @CodigoSAP;
+        -- Step 3: Fetch the first row
+        FETCH NEXT FROM AlterarContratoAtivadoCursor INTO @Contrato, @Cliente, @CodigoSAP;
 
-                -- Step 4: Loop through the rows
-                WHILE @@FETCH_STATUS = 0
-                BEGIN
-                        -- Ativar Contratos quem não pedem Aprovação nem Aceite
-                        EXECUTE @RC = [dbo].[SP_AlterarContrato] @Contrato;
+        -- Step 4: Loop through the rows
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            -- Ativar Contratos quem não pedem Aprovação nem Aceite
+            EXECUTE @RC = [dbo].[SP_AlterarContrato] @Contrato;
 
-                        INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
-                        SELECT @uploadid, 'Alterar Metas/Pontos do Contrato '+ cast(@Contrato as nvarchar(10)) + ' para cliente ' + @CodigoSAP
+            INSERT INTO dbo.UploadDetalhes (UploadId, LogEvento) 
+            SELECT @uploadid, 'Alterar Metas/Pontos do Contrato '+ cast(@Contrato as nvarchar(10)) + ' para cliente ' + @CodigoSAP
 
-                        -- Enviar para nova Aprovação
-                        EXECUTE @RC = [dbo].[sp_ContratoEnviarAprovacao] 
-                           @ContratoId = @Contrato
-                          ,@Login = 'TradeFlow Carga novo HitList'
+            -- Enviar para nova Aprovação
+            EXECUTE @RC = [dbo].[sp_ContratoEnviarAprovacao] 
+               @ContratoId = @Contrato
+              ,@Login = 'TradeFlow Carga novo HitList'
 
-                        -- Fetch the next row
-                        FETCH NEXT FROM AlterarContratoAtivadoCursor INTO @Contrato, @Cliente, @CodigoSAP;
-                END;
+            -- Fetch the next row
+            FETCH NEXT FROM AlterarContratoAtivadoCursor INTO @Contrato, @Cliente, @CodigoSAP;
+        END;
 
-                -- Step 5: Close and deallocate the cursor
-                CLOSE AlterarContratoAtivadoCursor;
-                DEALLOCATE AlterarContratoAtivadoCursor;
+        -- Step 5: Close and deallocate the cursor
+        CLOSE AlterarContratoAtivadoCursor;
+        DEALLOCATE AlterarContratoAtivadoCursor;
 
 
         ------------------------------------------------------------------
