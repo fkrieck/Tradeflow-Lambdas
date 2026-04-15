@@ -1,0 +1,3 @@
+Codigo;Nome;Regional;Rede;Potencial;Regra;Mecanica;NomeMecanica;ChaveParaDetalhes;Meta1;PtsPremio1;Meta2;PtsPremio2;Meta3;PtsPremio3;Meta4;PtsPremio4;Meta5;PtsPremio5;Gatilho
+670883;PANIF E CONF SAN JOSE LTDA;PR;;;Meta Volume Total;TOP;Meta Volume Total + Meta Volume Premium + Compliance;;0;0;;;;;;;;;
+670883;PANIF E CONF SAN JOSE LTDA;PR;;;Meta Marcas;TOP;Meta Volume Total + Meta Volume Premium + Compliance;Premium PR;0;0;;;;;;;;;
