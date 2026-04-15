@@ -1,0 +1,203 @@
+/****** Object:  StoredProcedure [dbo].[SP_CriarContrato]    Script Date: 15/04/2026 15:03:50 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- ============================================================
+-- SP_CriarContrato - CORRIGIDA
+-- Correções aplicadas:
+--   [1] SELECT inicial de @ContratoId agora usa TOP 1, ORDER BY e
+--       filtra Status not in ('Cancelado') para evitar valor ambíguo
+--       quando o cliente tem múltiplos contratos da mesma mecânica.
+--   [2] Faixa 4: DraftPontos corrigido de Faixa2Pontos → Faixa4Pontos
+-- ============================================================
+CREATE PROCEDURE [dbo].[SP_CriarContrato]
+    @CodigoSAP nvarchar(20),
+    @CodigoMecanica nvarchar(20),
+    @UserLogin Varchar(100),
+    @ContratoId int OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    Declare
+        @ClienteId              int             = 0,
+        @ClienteNome            nvarchar(255)   = '',
+        @MecanicaId             int             = 0,
+        @ContratoRegraMetaId    int             = 0,
+        @Vigencia               int             = 0,
+        @EmailShoppOwner        varchar(200),
+        @ContactID              varchar(100),
+        @ExigeAprovacaoTrade    bit             = 0,
+        @ExigeAceiteCliente     bit             = 0,
+        @NovoContrato           bit             = 0,
+        @DiasAceite             int             = 0
+
+    -- Buscar e-mail/contactid prioritariamente pelo HitList
+    if (exists(select 1 from HitList where 
+        MecanicaCodigo = @CodigoMecanica and 
+        CodigoSAP = @CodigoSAP and 
+        Email is not null and len(Email) > 5))
+    begin
+        select top 1 
+            @EmailShoppOwner = email, @ContactID = contactid 
+        from HitList 
+        where 
+            MecanicaCodigo = @CodigoMecanica and CodigoSAP = @CodigoSAP and 
+            Email is not null and len(Email) > 5
+    end
+    else if (exists(select 1 from clientes_dte where codigoSAP = @CodigoSAP))
+        select top 1 
+            @EmailShoppOwner = email, @ContactID = contactid 
+        from clientes_dte 
+        where codigoSAP = @CodigoSAP
+
+    -- Buscar identificadores do cliente
+    Select @ClienteId = ClienteId, @ClienteNome = Nome 
+    from clientes 
+    where CodigoSAP = @CodigoSAP
+
+    -- Buscar identificador e configurações da mecânica
+    Select 
+        @MecanicaId             = MecanicaId, 
+        @Vigencia               = PrazoVigenciaMeses, 
+        @ExigeAprovacaoTrade    = ExigeAprovacaoTrade,
+        @ExigeAceiteCliente     = ExigeAceiteCliente,
+        @DiasAceite             = DiasAceite
+    from mecanicas 
+    where Codigo = @CodigoMecanica
+
+    -- [CORREÇÃO 1] Buscar o contrato vigente (não cancelado) desta mecânica para o cliente.
+    -- TOP 1 + ORDER BY + filtro de status evitam valor ambíguo quando existem
+    -- múltiplos registros (ex: um Cancelado e um Draft para a mesma mecânica).
+    select top 1 
+        @ContratoId = ContratoId 
+    from contratos 
+    where 
+        ClienteId   = @ClienteId 
+        and MecanicaId  = @MecanicaId
+        and Status not in ('Cancelado')
+    order by ContratoId desc
+
+    -- Criar contrato apenas se o cliente não possui nenhum contrato não-cancelado
+    If not exists(
+        select 1 from contratos 
+        where ClienteId = @ClienteId and Status not in ('Cancelado')
+    )
+    Begin
+        Insert Into [dbo].[contratos] 
+            (ClienteId, ClienteNome, DataContrato, Vigencia, Status, MecanicaId, CriadoPor, ShoppingOwnerAccount, ShopOwnerContactId)
+        Values 
+            (@ClienteId, @ClienteNome, getdate(), @Vigencia, 'Draft', @MecanicaId, @UserLogin, @EmailShoppOwner, @ContactID)
+
+        Set @ContratoId = SCOPE_IDENTITY();
+
+        -- Criar as regras da mecânica neste contrato
+        Insert Into [dbo].[contratoRegrasMetas] (ContratoId, RegraId, EventoExecutado)
+        select @ContratoId, RegraId, 'Não' 
+        from MecanicaRegras 
+        where MecanicaId = @MecanicaId
+
+        Set @ContratoRegraMetaId = SCOPE_IDENTITY();
+        set @NovoContrato = 1
+
+        -- Inserir Faixas de Metas baseadas no HitList
+        Insert into [dbo].[contratoRegrasFaixaMetas] 
+            ([ContratoRegraMetaId], [Meta], [Pontos], [DraftMeta], [DraftPontos], [Ordem])
+
+        -- Faixa 1
+        Select crm.ContratoRegraMetaId, Faixa1Meta, Faixa1Pontos, Faixa1Meta, Faixa1Pontos, 1
+        From HitList H
+            Inner Join dbo.regras r                 on H.RegraNome = r.nome
+            Inner Join dbo.contratoRegrasMetas crm  on crm.contratoid = @ContratoId and crm.regraid = r.regraid
+        Where CodigoSAP = @CodigoSAP and MecanicaCodigo = @CodigoMecanica and H.Faixa1Meta is not null
+
+        union all -- Faixa 2
+        Select crm.ContratoRegraMetaId, Faixa2Meta, Faixa2Pontos, Faixa2Meta, Faixa2Pontos, 2
+        From HitList H
+            Inner Join dbo.regras r                 on H.RegraNome = r.nome
+            Inner Join dbo.contratoRegrasMetas crm  on crm.contratoid = @ContratoId and crm.regraid = r.regraid
+        Where CodigoSAP = @CodigoSAP and MecanicaCodigo = @CodigoMecanica and H.Faixa2Meta is not null
+
+        union all -- Faixa 3
+        Select crm.ContratoRegraMetaId, Faixa3Meta, Faixa3Pontos, Faixa3Meta, Faixa3Pontos, 3
+        From HitList H
+            Inner Join dbo.regras r                 on H.RegraNome = r.nome
+            Inner Join dbo.contratoRegrasMetas crm  on crm.contratoid = @ContratoId and crm.regraid = r.regraid
+        Where CodigoSAP = @CodigoSAP and MecanicaCodigo = @CodigoMecanica and H.Faixa3Meta is not null
+
+        union all -- Faixa 4 [CORREÇÃO 2]: DraftPontos era Faixa2Pontos, corrigido para Faixa4Pontos
+        Select crm.ContratoRegraMetaId, Faixa4Meta, Faixa4Pontos, Faixa4Meta, Faixa4Pontos, 4
+        From HitList H
+            Inner Join dbo.regras r                 on H.RegraNome = r.nome
+            Inner Join dbo.contratoRegrasMetas crm  on crm.contratoid = @ContratoId and crm.regraid = r.regraid
+        Where CodigoSAP = @CodigoSAP and MecanicaCodigo = @CodigoMecanica and H.Faixa4Meta is not null
+
+        union all -- Faixa 5
+        Select crm.ContratoRegraMetaId, Faixa5Meta, Faixa5Pontos, Faixa5Meta, Faixa5Pontos, 5
+        From HitList H
+            Inner Join dbo.regras r                 on H.RegraNome = r.nome
+            Inner Join dbo.contratoRegrasMetas crm  on crm.contratoid = @ContratoId and crm.regraid = r.regraid
+        Where CodigoSAP = @CodigoSAP and MecanicaCodigo = @CodigoMecanica and H.Faixa5Meta is not null
+    End
+    Else If @ContratoId is null  -- cliente tem contrato ativo mas não é dessa mecânica
+        Set @ContratoId = -1
+
+    -- Prosseguir apenas se há um contrato válido
+    if @ContratoId > 0
+    Begin
+        exec sp_ContratoCalcFaixaAprovacao @ContratoId
+
+        -- Verificar se a mecânica exige aprovação de Trade
+        If @ExigeAprovacaoTrade = 0 and @NovoContrato = 1
+        Begin
+            If not exists(select 1 from ContratoDetalhesAprovacao where ContratoId = @ContratoId)
+                Insert Into dbo.ContratoDetalhesAprovacao (ContratoId, Descricao, Usuario, Aprovado) 
+                values (@ContratoId, 'Tipo de Contrato não exige aprovação', 'Trade Flow', 1)
+        End
+
+        -- Verificar se a mecânica exige aceite do cliente
+        If @ExigeAceiteCliente = 0 and @NovoContrato = 1 
+        Begin
+            declare @dtInicio datetime
+            declare @dtFim   datetime
+            DECLARE @diaAtual INT = DAY(GETDATE());
+
+            IF @diaAtual > @DiasAceite
+                SET @dtInicio = DATEADD(MONTH, 1, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0));
+            ELSE
+                SET @dtInicio = DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0);
+
+            set @dtFim = DATEADD(DAY, -1, DATEADD(MONTH, @Vigencia, @dtInicio))
+
+            Update Contratos set 
+                Status          = 'Ativo',
+                is_active       = 1,
+                ContratoInicio  = @dtInicio,
+                ContratoFim     = @dtFim
+            where ContratoId = @ContratoId
+
+            Update crfm set
+                ApprovedMeta    = Meta,
+                ApprovedPontos  = Pontos
+            From
+                contratos c
+                inner join contratoRegrasMetas crm      on c.ContratoId = crm.ContratoId
+                inner join contratoRegrasFaixaMetas crfm on crm.ContratoRegraMetaId = crfm.ContratoRegraMetaId
+            where c.ContratoId = @ContratoId
+        End
+        Else
+        Begin
+            if @ContactID is not null and LEN(@ContactID) > 3
+                Update Contratos set syncAceite = 0 where ContratoId = @ContratoId
+            Else
+                Insert into dbo.Logs (EventLog) 
+                select 'O Contrato: ' + cast(@ContratoId as varchar(10)) + ' não possui ContactId para o iFrame'
+        End
+    END
+END;
+GO
+
+

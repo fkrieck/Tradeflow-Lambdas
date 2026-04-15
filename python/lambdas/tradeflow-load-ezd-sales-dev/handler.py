@@ -467,7 +467,7 @@ def MainFunction(event):
 
     except Exception as e:
         LOGGER.error(f"ERROR: Unexpected error: Could not Delete the parquet {path_parquet_name}  do s3 bucket: {bucket_name}.")
-        LOGGER.error(e)
+        LOGGER.errorinfo(e)
 
     try:
         execute_query(f"""Exec SPINSUPD_LambdasRunning '{lambda_Name}','{path_name}','{eventid}', 4""")
