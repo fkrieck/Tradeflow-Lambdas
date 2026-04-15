@@ -4,7 +4,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 import awswrangler as wr
-import pyodbc
+import pymssql
 from datetime import datetime
 from uuid import uuid4
 import os
@@ -13,22 +13,14 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from typing import Union, Iterable
-from urllib.parse import quote_plus
 
+### lambdas
+# arn:aws:lambda:eu-west-1:162308313114:layer:pyodbc-compilado:1
 ### LAYERS - PYTHON 3.12
 #arn:aws:lambda:eu-west-1:336392948345:layer:AWSSDKPandas-Python312:20
-#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:13
-#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:10
-#
-# ATENÇÃO - Klayers-p312-pyodbc NÃO existe no KLayers para Python 3.12.
-# pyodbc está disponível apenas para Python 3.10: Klayers-p310-pyodbc:5
-# (arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p310-pyodbc:5)
-# Para Python 3.12 é necessário um layer customizado contendo:
-#   - unixODBC (biblioteca do sistema)
-#   - Microsoft ODBC Driver 18 for SQL Server (msodbcsql18)
-#   - pyodbc (wheel compilado contra o unixODBC do layer)
-# Referência KLayers: https://github.com/keithrozario/Klayers
-# Tutorial custom layer: https://docs.aws.amazon.com/lambda/latest/dg/python-layers.html
+#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-pymssql:8
+#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-numpy:11
+#arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-p312-SQLAlchemy:7
 
 
 LOGGER = logging.getLogger()
@@ -45,7 +37,7 @@ def build_insert_from_json_line(
     """
     Gera um comando SQL INSERT INTO #env.TABLE_NAME# (cols) VALUES (vals)
     a partir de um JSON (string ou dict).
-    
+
     - Converte tokens nulos para NULL (por padrão: "<NA>", "" e None).
     - Faz escape de aspas simples em textos e usa N'...' (Unicode) para SQL Server.
     - Detecta números (int/float) para emitir sem aspas.
@@ -150,7 +142,7 @@ def get_secret(secret_name, region_name):
         service_name='secretsmanager',
         region_name=region_name
     )
- 
+
     # In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
     # See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
     # We rethrow the exception by default.
@@ -201,13 +193,9 @@ port = secrets["port"]
 
 
 def create_database_connection() -> Engine:
-    url = (
-        f"mssql+pyodbc://{quote_plus(str(user))}:{quote_plus(str(password))}"
-        f"@{server}:{port}/{database}"
-        f"?driver=ODBC+Driver+18+for+SQL+Server"
-    )
+    url = f'mssql+pymssql://{user}:{password}@{server}:{port}/{database}'
 
-    return create_engine(url, fast_executemany=True)
+    return create_engine(url)
 
 def insert_into_database(
     df: pd.DataFrame,
@@ -228,7 +216,7 @@ def insert_into_database(
                      .dt.strftime("%Y-%m-%d %H:%M:%S")
 
     LOGGER.info(f'SQL Database - Data inserted into "{table}"')
-    
+
     if not df.empty:
         jsonline = df.iloc[0].to_json()
         LOGGER.info(f"total de linhas '{table}': {len(df)}")
@@ -351,6 +339,20 @@ def insert_data(row, eventfile):
     cur.close()
 '''
 
+# Criar conexão com a Base de dados e registrar o status de execução do evento
+'''
+def create_cursor():
+    try:
+        conn = pymssql.connect(server=rds_endpoint, port=port, user=username, password=password, database=db_name)
+        conn.autocommit(True)
+        cur = conn.cursor()
+    except Exception as e:
+        LOGGER.error("ERROR: Unexpected error: Unable to connect to RDS MSSql instance. ")
+        LOGGER.error(e)
+        sys.exit(1)
+
+    return cur
+'''
 
 # Identificador e data do Evento
 eventid = str(uuid4())
