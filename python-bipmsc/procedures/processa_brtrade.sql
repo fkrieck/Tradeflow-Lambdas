@@ -114,7 +114,7 @@ BEGIN
 
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = CONCAT('Passo 2 concluído: ', @RowsDeleted, ' linhas removidas da STGBRTRADE');
+            @Detalhes = 'Passo 2 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' linhas removidas da STGBRTRADE';
 
         -- ==================================================
         -- Passo 3: Limpeza da FinalBRTrade
@@ -150,9 +150,9 @@ BEGIN
 
             EXEC SPINS_LOGS
                 @Processo = 'lambda_brtrade',
-                @Detalhes = CONCAT('Passo 3: ', @RowsDeleted,
-                    ' linhas removidas da FinalBRTrade para Type=', @Type,
-                    ' / ', @FaixaField, '=', @Mes);
+                @Detalhes = 'Passo 3: ' + CAST(@RowsDeleted AS NVARCHAR(20)) +
+                    ' linhas removidas da FinalBRTrade para Type=' + @Type +
+                    ' / ' + @FaixaField + '=' + @Mes;
 
             FETCH NEXT FROM cur_map INTO @Type, @FaixaField, @Mes;
         END
@@ -162,7 +162,7 @@ BEGIN
 
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = CONCAT('Passo 3 concluído: total de ', @TotalDeleted, ' linhas removidas da FinalBRTrade');
+            @Detalhes = 'Passo 3 concluído: total de ' + CAST(@TotalDeleted AS NVARCHAR(20)) + ' linhas removidas da FinalBRTrade';
 
         -- ==================================================
         -- Passo 4: Recarga da FinalBRTrade
@@ -219,7 +219,7 @@ BEGIN
 
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = CONCAT('Passo 4 concluído: ', @TotalInserted, ' linhas inseridas na FinalBRTrade');
+            @Detalhes = 'Passo 4 concluído: ' + CAST(@TotalInserted AS NVARCHAR(20)) + ' linhas inseridas na FinalBRTrade';
 
         DROP TABLE IF EXISTS #TypeMesMap;
 
@@ -236,7 +236,7 @@ BEGIN
 
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = CONCAT('ERRO: ', ERROR_MESSAGE());
+            @Detalhes = 'ERRO: ' + ERROR_MESSAGE();
     END CATCH;
 END;
 GO
