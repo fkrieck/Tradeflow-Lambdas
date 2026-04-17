@@ -44,7 +44,8 @@ BEGIN
             @FieldName NVARCHAR(20),
             @Mes       NVARCHAR(20),
             @Sql       NVARCHAR(MAX),
-            @ParamDef  NVARCHAR(300);
+            @ParamDef  NVARCHAR(300),
+            @msg       NVARCHAR(MAX);
 
         -- Iterar sobre cada combinação distinta (Source, Type)
         DECLARE cur_types CURSOR LOCAL FAST_FORWARD FOR
@@ -112,9 +113,10 @@ BEGIN
 
         SET @RowsDeleted = @@ROWCOUNT;
 
+        SET @msg = 'Passo 2 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' linhas removidas da STGBRTRADE';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = 'Passo 2 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' linhas removidas da STGBRTRADE';
+            @Detalhes = @msg;
 
         -- ==================================================
         -- Passo 3: Limpeza da FinalBRTrade
@@ -148,11 +150,12 @@ BEGIN
             SET @RowsDeleted  = @@ROWCOUNT;
             SET @TotalDeleted = @TotalDeleted + @RowsDeleted;
 
+            SET @msg = 'Passo 3: ' + CAST(@RowsDeleted AS NVARCHAR(20)) +
+                ' linhas removidas da FinalBRTrade para Type=' + @Type +
+                ' / ' + @FaixaField + '=' + @Mes;
             EXEC SPINS_LOGS
                 @Processo = 'lambda_brtrade',
-                @Detalhes = 'Passo 3: ' + CAST(@RowsDeleted AS NVARCHAR(20)) +
-                    ' linhas removidas da FinalBRTrade para Type=' + @Type +
-                    ' / ' + @FaixaField + '=' + @Mes;
+                @Detalhes = @msg;
 
             FETCH NEXT FROM cur_map INTO @Type, @FaixaField, @Mes;
         END
@@ -160,9 +163,10 @@ BEGIN
         CLOSE cur_map;
         DEALLOCATE cur_map;
 
+        SET @msg = 'Passo 3 concluído: total de ' + CAST(@TotalDeleted AS NVARCHAR(20)) + ' linhas removidas da FinalBRTrade';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = 'Passo 3 concluído: total de ' + CAST(@TotalDeleted AS NVARCHAR(20)) + ' linhas removidas da FinalBRTrade';
+            @Detalhes = @msg;
 
         -- ==================================================
         -- Passo 4: Recarga da FinalBRTrade
@@ -217,9 +221,10 @@ BEGIN
 
         DECLARE @TotalInserted INT = @@ROWCOUNT;
 
+        SET @msg = 'Passo 4 concluído: ' + CAST(@TotalInserted AS NVARCHAR(20)) + ' linhas inseridas na FinalBRTrade';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = 'Passo 4 concluído: ' + CAST(@TotalInserted AS NVARCHAR(20)) + ' linhas inseridas na FinalBRTrade';
+            @Detalhes = @msg;
 
         DROP TABLE IF EXISTS #TypeMesMap;
 
@@ -234,9 +239,10 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
 
+        SET @msg = 'ERRO: ' + ERROR_MESSAGE();
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = 'ERRO: ' + ERROR_MESSAGE();
+            @Detalhes = @msg;
     END CATCH;
 END;
 GO
