@@ -45,13 +45,12 @@ def execute_insert_trade(data:str):
     # Remover a primeira linha (cabeçalho)
     data_without_header = data[1:]
 
-    
+    # Converter cada linha em uma tupla
+    data_as_tuples = [tuple(row) for row in data_without_header]
+
     for row in data_as_tuples:
         if len(row) != 30:
             print("Erro: tupla com tamanho incorreto:", len(row), row)
-
-    # Converter cada linha em uma tupla
-    data_as_tuples = [tuple(row) for row in data_without_header]
     #data_as_tuples = ajustar_tamanho_linhas(data_without_header)
 
     cursor = conn.cursor()
@@ -120,7 +119,7 @@ def getCsv(bucket_name, s3_file_name):
                 print(f"Falha ao decodificar com: {enc}")
                 continue
 
-        raise UnicodeDecodeError("Não foi possível decodificar o arquivo com as codificações conhecidas.")
+        raise ValueError("Não foi possível decodificar o arquivo com as codificações conhecidas.")
 
     except ClientError as e:
         if e.response['Error']['Code'] == '404':
@@ -129,8 +128,9 @@ def getCsv(bucket_name, s3_file_name):
             print(f"Você não tem permissão para acessar o arquivo {s3_file_name}.")
         else:
             print(f"Ocorreu um erro ao tentar acessar o arquivo: {e}")
+        raise
 
-def SqlStageSave(header, line):
+def SqlStageSave(line):
 
     # if len(line) != 30:
     #     print(f"validação de linha falhou.")
@@ -172,7 +172,7 @@ def createCsvObj(body):
             oHeader = row
             oFields = len(row)
         else:
-            SqlStageSave(oHeader, row)
+            SqlStageSave(row)
 
     # print(reader)
     return 1
