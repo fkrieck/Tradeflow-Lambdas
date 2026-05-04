@@ -10,10 +10,12 @@ GO
 -- ============================================================
 -- processa_brtrade
 -- Consolida BRTRADE + STGBRTRADE em FinalBRTrade:
---   Passo 1 - Reconhecimento dinâmico de Type/Mês (Field1-Field50)
---   Passo 2 - Limpeza diferencial da STGBRTRADE
---   Passo 3 - Limpeza da FinalBRTrade por Type/Mês
---   Passo 4 - Recarga da FinalBRTrade
+--   Passo 1 - Deduplicação da STGBRTRADE (chave CodCliente+Type, mantém maior ID)
+--   Passo 2 - Deduplicação da BRTRADE (chave CodCliente+Type, mantém maior ID)
+--   Passo 3 - Reconhecimento dinâmico de Type/Mês (Field1-Field50)
+--   Passo 4 - Limpeza diferencial da STGBRTRADE
+--   Passo 5 - Limpeza da FinalBRTrade por Type/Mês
+--   Passo 6 - Recarga da FinalBRTrade
 -- Logs registados via SPINS_LOGS. Rollback automático em erro.
 -- ============================================================
 CREATE PROCEDURE [dbo].[processa_brtrade]
@@ -25,7 +27,7 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- ==================================================
-        -- Passo 1: Reconhecimento dinâmico de Type e Mês
+        -- Passo 3: Reconhecimento dinâmico de Type e Mês
         -- ==================================================
         -- Mapeia para cada (Source, Type) qual Field contém
         -- um nome de mês em português.
@@ -38,14 +40,49 @@ BEGIN
         );
 
         DECLARE
-            @Source    NVARCHAR(20),
-            @Type      NVARCHAR(100),
-            @FieldNum  INT,
-            @FieldName NVARCHAR(20),
-            @Mes       NVARCHAR(20),
-            @Sql       NVARCHAR(MAX),
-            @ParamDef  NVARCHAR(300),
-            @msg       NVARCHAR(MAX);
+            @Source      NVARCHAR(20),
+            @Type        NVARCHAR(100),
+            @FieldNum    INT,
+            @FieldName   NVARCHAR(20),
+            @Mes         NVARCHAR(20),
+            @Sql         NVARCHAR(MAX),
+            @ParamDef    NVARCHAR(300),
+            @msg         NVARCHAR(MAX),
+            @RowsDeleted INT;
+
+        -- ==================================================
+        -- Passo 1: Deduplicação da STGBRTRADE
+        -- Remove duplicatas por (CodCliente, Type), mantendo maior ID.
+        -- ==================================================
+        ;WITH cte_stg AS (
+            SELECT ID,
+                   ROW_NUMBER() OVER (PARTITION BY CodCliente, Type ORDER BY ID DESC) AS rn
+            FROM STGBRTRADE
+        )
+        DELETE FROM cte_stg WHERE rn > 1;
+
+        SET @RowsDeleted = @@ROWCOUNT;
+        SET @msg = 'Passo 1 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' duplicatas removidas da STGBRTRADE';
+        EXEC SPINS_LOGS
+            @Processo = 'lambda_brtrade',
+            @Detalhes = @msg;
+
+        -- ==================================================
+        -- Passo 2: Deduplicação da BRTRADE
+        -- Remove duplicatas por (CodCliente, Type), mantendo maior ID.
+        -- ==================================================
+        ;WITH cte_br AS (
+            SELECT ID,
+                   ROW_NUMBER() OVER (PARTITION BY CodCliente, Type ORDER BY ID DESC) AS rn
+            FROM BRTRADE
+        )
+        DELETE FROM cte_br WHERE rn > 1;
+
+        SET @RowsDeleted = @@ROWCOUNT;
+        SET @msg = 'Passo 2 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' duplicatas removidas da BRTRADE';
+        EXEC SPINS_LOGS
+            @Processo = 'lambda_brtrade',
+            @Detalhes = @msg;
 
         -- Iterar sobre cada combinação distinta (Source, Type)
         DECLARE cur_types CURSOR LOCAL FAST_FORWARD FOR
@@ -100,26 +137,25 @@ BEGIN
 
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
-            @Detalhes = 'Passo 1 concluído: mapeamento de Type/Mês realizado';
+            @Detalhes = 'Passo 3 concluído: mapeamento de Type/Mês realizado';
 
         -- ==================================================
-        -- Passo 2: Limpeza diferencial da STGBRTRADE
+        -- Passo 4: Limpeza diferencial da STGBRTRADE
         -- Remove Types que já estão em BRTRADE
         -- ==================================================
-        DECLARE @RowsDeleted INT;
 
         DELETE FROM STGBRTRADE
         WHERE Type IN (SELECT DISTINCT Type FROM BRTRADE);
 
         SET @RowsDeleted = @@ROWCOUNT;
 
-        SET @msg = 'Passo 2 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' linhas removidas da STGBRTRADE';
+        SET @msg = 'Passo 4 concluído: ' + CAST(@RowsDeleted AS NVARCHAR(20)) + ' linhas removidas da STGBRTRADE';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
             @Detalhes = @msg;
 
         -- ==================================================
-        -- Passo 3: Limpeza da FinalBRTrade
+        -- Passo 5: Limpeza da FinalBRTrade
         -- Para cada (Type, FaixaField, Mes) do mapa,
         -- apaga os registros correspondentes.
         -- ==================================================
@@ -150,7 +186,7 @@ BEGIN
             SET @RowsDeleted  = @@ROWCOUNT;
             SET @TotalDeleted = @TotalDeleted + @RowsDeleted;
 
-            SET @msg = 'Passo 3: ' + CAST(@RowsDeleted AS NVARCHAR(20)) +
+            SET @msg = 'Passo 5: ' + CAST(@RowsDeleted AS NVARCHAR(20)) +
                 ' linhas removidas da FinalBRTrade para Type=' + @Type +
                 ' / ' + @FaixaField + '=' + @Mes;
             EXEC SPINS_LOGS
@@ -163,13 +199,13 @@ BEGIN
         CLOSE cur_map;
         DEALLOCATE cur_map;
 
-        SET @msg = 'Passo 3 concluído: total de ' + CAST(@TotalDeleted AS NVARCHAR(20)) + ' linhas removidas da FinalBRTrade';
+        SET @msg = 'Passo 5 concluído: total de ' + CAST(@TotalDeleted AS NVARCHAR(20)) + ' linhas removidas da FinalBRTrade';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
             @Detalhes = @msg;
 
         -- ==================================================
-        -- Passo 4: Recarga da FinalBRTrade
+        -- Passo 6: Recarga da FinalBRTrade
         -- BRTRADE (obrigatória) + STGBRTRADE remanescente
         -- ==================================================
         INSERT INTO FinalBRTrade (
@@ -221,7 +257,7 @@ BEGIN
 
         DECLARE @TotalInserted INT = @@ROWCOUNT;
 
-        SET @msg = 'Passo 4 concluído: ' + CAST(@TotalInserted AS NVARCHAR(20)) + ' linhas inseridas na FinalBRTrade';
+        SET @msg = 'Passo 6 concluído: ' + CAST(@TotalInserted AS NVARCHAR(20)) + ' linhas inseridas na FinalBRTrade';
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
             @Detalhes = @msg;
