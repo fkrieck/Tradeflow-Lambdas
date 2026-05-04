@@ -26,12 +26,6 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- ==================================================
-        -- Passo 3: Reconhecimento dinâmico de Type e Mês
-        -- ==================================================
-        -- Mapeia para cada (Source, Type) qual Field contém
-        -- um nome de mês em português.
-
         CREATE TABLE #TypeMesMap (
             Source     NVARCHAR(20)  NOT NULL,
             Type       NVARCHAR(100) NOT NULL,
@@ -83,6 +77,12 @@ BEGIN
         EXEC SPINS_LOGS
             @Processo = 'lambda_brtrade',
             @Detalhes = @msg;
+
+        -- ==================================================
+        -- Passo 3: Reconhecimento dinâmico de Type e Mês
+        -- ==================================================
+        -- Mapeia para cada (Source, Type) qual Field contém
+        -- um nome de mês em português.
 
         -- Iterar sobre cada combinação distinta (Source, Type)
         DECLARE cur_types CURSOR LOCAL FAST_FORWARD FOR
